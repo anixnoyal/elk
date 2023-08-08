@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Download and install the public signing key
+# Add Elastic's signing key
 rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
 
-# Create the Elasticsearch repository
-cat > /etc/yum.repos.d/elasticsearch.repo << EOL
+# Add Elastic's YUM repository
+cat <<EOF > /etc/yum.repos.d/elasticsearch.repo
 [elasticsearch-8.x]
 name=Elasticsearch repository for 8.x packages
 baseurl=https://artifacts.elastic.co/packages/8.x/yum
@@ -13,56 +13,33 @@ gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=1
 autorefresh=1
 type=rpm-md
-EOL
+EOF
 
-# Install Elasticsearch
-yum install elasticsearch -y
+# Install Java (OpenJDK 11)
+yum install -y java-11-openjdk-devel
 
-# Enable and start Elasticsearch
+# Install Elasticsearch, Logstash, Kibana
+yum install -y elasticsearch logstash kibana
+
+# Adjusting the system configuration for Elasticsearch
+# Increase max file descriptors
+ulimit -n 65535
+
+# Increase max virtual memory
+sysctl -w vm.max_map_count=262144
+
+# Start and enable services
+systemctl start elasticsearch
 systemctl enable --now elasticsearch
 
-#!/bin/bash
-
-# Create the Logstash repository
-cat > /etc/yum.repos.d/logstash.repo << EOL
-[logstash-8.x]
-name=Elastic repository for 8.x packages
-baseurl=https://artifacts.elastic.co/packages/8.x/yum
-gpgcheck=1
-gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
-enabled=1
-autorefresh=1
-type=rpm-md
-EOL
-
-# Install Logstash
-yum install logstash -y
-
-# Enable and start Logstash
+systemctl start logstash
 systemctl enable --now logstash
 
-
-#!/bin/bash
-
-# Create the Kibana repository
-cat > /etc/yum.repos.d/kibana.repo << EOL
-[kibana-8.x]
-name=Kibana repository for 8.x packages
-baseurl=https://artifacts.elastic.co/packages/8.x/yum
-gpgcheck=1
-gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
-enabled=1
-autorefresh=1
-type=rpm-md
-EOL
-
-# Install Kibana
-yum install kibana -y
-
-# Enable and start Kibana
+systemctl start kibana
 systemctl enable --now kibana
 
-
-systemctl restart elasticsearch
-systemctl restart logstash
-systemctl restart kibana
+# Print status
+echo "Installation complete. Here's the status of the services:"
+systemctl status elasticsearch
+systemctl status logstash
+systemctl status kibana
