@@ -43,3 +43,6 @@ echo "Installation complete. Here's the status of the services:"
 systemctl status elasticsearch
 systemctl status logstash
 systemctl status kibana
+
+aws ec2 describe-security-groups --query "SecurityGroups[?IpPermissions[?FromPort==`5601` && ToPort==`5601`]].[GroupName,GroupId]" --output table
+
