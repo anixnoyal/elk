@@ -46,3 +46,9 @@ systemctl status kibana
 
 aws ec2 describe-security-groups --query "SecurityGroups[?IpPermissions[?FromPort==`5601` && ToPort==`5601`]].[GroupName,GroupId]" --output table
 
+elasticsearch.requestHeadersWhitelist: [ "Authorization", "Host", "Connection", "Proxy-Authorization", "Proxy-Authenticate", "X-Forwarded-For" ]
+
+elasticsearch.customHeaders: { "Proxy-Authorization": "<Your_Proxy_Auth_Header_Value>" }
+
+elasticsearch.url: "http://<Your_Elasticsearch_Host>:<Your_Elasticsearch_Port>"
+
