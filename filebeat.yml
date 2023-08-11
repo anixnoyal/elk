@@ -1,0 +1,16 @@
+filebeat.inputs:
+- type: filestream
+  id: my-filestream-id
+  paths:
+    - /var/log/messages
+    - /var/log/*.log
+
+setup.kibana:
+  host: "192.168.31.244:5601"
+
+output.logstash:
+  hosts: "192.168.31.234:5044"
+
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: ture
