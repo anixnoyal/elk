@@ -9,11 +9,11 @@ cp /etc/metricbeat/metricbeat.yml /etc/metricbeat/metricbeat.yml.original
 grep -v -e '^[[:space:]]*#' -e '^$' /etc/metricbeat/metricbeat.yml.original > /etc/metricbeat/metricbeat.yml
 
 vi /etc/metricbeat/metricbeat.yml
+
+setup.kibana:
+  host: "192.168.31.244:5601"
 output.elasticsearch:
   hosts: ["192.168.31.249:9200"]
-
-#or
-
 output.logstash:
   hosts: ["your_logstash_server:5044"]
 
