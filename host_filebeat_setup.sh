@@ -11,13 +11,26 @@ grep -v -e '^[[:space:]]*#' -e '^$' /etc/filebeat/filebeat.yml.original > /etc/f
 
 vi /etc/filebeat/filebeat.yml
 
+filebeat.inputs:
+- type: filestream
+  id: my-filestream-id
+  enabled: true
+  paths:
+    - /var/log/*.log
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: ture
+
+setup.kibana:
+  host: "192.168.31.244:5601"
 output.elasticsearch:
   hosts: ["192.168.31.249:9200"]
+#output.logstash:
+#  hosts: ["192.168.31.234:5044"]
 
-#or
-
-output.logstash:
-  hosts: ["your_logstash_server:5044"]
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
 
 filebeat setup -e
 
