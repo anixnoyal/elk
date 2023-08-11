@@ -15,5 +15,7 @@ output.logstash:
 #or
   hosts: ["your_logstash_server:5044"]
 
+filebeat setup -e
+
 systemctl enable --now filebeat
 systemctl status filebeat
