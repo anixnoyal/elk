@@ -22,6 +22,12 @@ yum install nc mlocate java-11-openjdk-devel -y
 
 # Install Elasticsearch - master 01
 
+
+#change the hostnames
+Server_name="master1"
+echo "$Server_name" | sudo tee /etc/hostname
+hostnamectl set-hostname $Server_name
+
 #HTTP/INSECURE
 yum install elasticsearch
 
@@ -55,6 +61,11 @@ curl http://localhost:9200
 
 # INSTALL logstash server
 
+#change the hostnames
+Server_name="logstash1"
+echo "$Server_name" | sudo tee /etc/hostname
+hostnamectl set-hostname $Server_name
+
 yum install logstash -y
 
 vi /etc/logstash/conf.d/logstash.conf
@@ -84,10 +95,14 @@ systemctl status logstash
 
 # INSTALL kibana
 
+Server_name="kibana1"
+echo "$Server_name" | sudo tee /etc/hostname
+hostnamectl set-hostname $Server_name
+
 yum install kibana -y 
 
 mv /etc/kibana/kibana.yml /etc/kibana/kibana.yml.original 
-cat /etc/kibana/kibana.yml.original  | grep -v -e "^#" -e "^$" > /etc/kibana/kibana.yml 
+cat /etc/kibana/kibana.yml.original  | egrep -v -e "^#" -e "^$" > /etc/kibana/kibana.yml 
 
 vi /etc/kibana/kibana.yml 
 server.host: "0.0.0.0"
@@ -97,4 +112,31 @@ systemctl enable --now kibana
 systemctl status kibana
 
 
+# HOST filebeat and metricbeat installation
+Server_name="elk-host1"
+echo "$Server_name" | sudo tee /etc/hostname
+hostnamectl set-hostname $Server_name
+
+
+yum install metricbeat filebeat -y
+
+vi /etc/metricbeat/metricbeat.yml
+output.logstash:
+  hosts: ["your_logstash_server:5044"]
+
+vi /etc/filebeat/filebeat.yml
+output.logstash:
+  hosts: ["your_logstash_server:5044"]
+
+
+systemctl start metricbeat
+systemctl enable metricbeat
+systemctl start filebeat
+systemctl enable filebeat
+
+
+
+
+systemctl start metricbeat
+systemctl enable metricbeat
 
