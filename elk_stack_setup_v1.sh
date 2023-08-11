@@ -31,8 +31,8 @@ hostnamectl set-hostname $Server_name
 #HTTP/INSECURE
 yum install elasticsearch
 
-mv /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.original 
-cat /etc/elasticsearch/elasticsearch.yml.original | grep -v ^# > /etc/elasticsearch/elasticsearch.yml
+cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.original 
+grep -v -e '^[[:space:]]*#' -e '^$' /etc/elasticsearch/elasticsearch.yml.original  > /etc/elasticsearch/elasticsearch.yml
 
 vi /etc/elasticsearch/elasticsearch.yml
 xpack.security.enabled: false
@@ -46,8 +46,9 @@ discovery.zen.ping.unicast.hosts: ["server1_ip", "server2_ip", "server3_ip"]
 discovery.zen.minimum_master_nodes: 2  # Majority of master eligible nodes
 
 #JVM MEMORY SETUP
-mv /etc/elasticsearch/jvm.options /etc/elasticsearch/jvm.options.original 
-cat /etc/elasticsearch/jvm.options.original | grep -v ^# > /etc/elasticsearch/jvm.options
+
+cp /etc/elasticsearch/jvm.options /etc/elasticsearch/jvm.options.original
+grep -v -e '^[[:space:]]*#' -e '^$' /etc/elasticsearch/jvm.options.original  > /etc/elasticsearch/jvm.options
 
 vi /etc/elasticsearch/jvm.options
 -Xms1g
@@ -101,8 +102,8 @@ hostnamectl set-hostname $Server_name
 
 yum install kibana -y 
 
-mv /etc/kibana/kibana.yml /etc/kibana/kibana.yml.original 
-cat /etc/kibana/kibana.yml.original  | egrep -v -e "^#" -e "^$" > /etc/kibana/kibana.yml 
+cp /etc/kibana/kibana.yml /etc/kibana/kibana.yml.original 
+grep -v -e '^[[:space:]]*#' -e '^$' /etc/kibana/kibana.yml.original > /etc/kibana/kibana.yml
 
 vi /etc/kibana/kibana.yml 
 server.host: "0.0.0.0"
@@ -120,23 +121,23 @@ hostnamectl set-hostname $Server_name
 
 yum install metricbeat filebeat -y
 
+cp /etc/metricbeat/metricbeat.yml /etc/metricbeat/metricbeat.yml.original 
+grep -v -e '^[[:space:]]*#' -e '^$' /etc/metricbeat/metricbeat.yml.original > /etc/metricbeat/metricbeat.yml
+
 vi /etc/metricbeat/metricbeat.yml
 output.logstash:
   hosts: ["your_logstash_server:5044"]
+
+systemctl enable --now metricbeat
+systemctl status metricbeat
+
+
+cp /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.original 
+grep -v -e '^[[:space:]]*#' -e '^$' /etc/filebeat/filebeat.yml.original > /etc/filebeat/filebeat.yml
 
 vi /etc/filebeat/filebeat.yml
 output.logstash:
   hosts: ["your_logstash_server:5044"]
 
-
-systemctl start metricbeat
-systemctl enable metricbeat
-systemctl start filebeat
-systemctl enable filebeat
-
-
-
-
-systemctl start metricbeat
-systemctl enable metricbeat
-
+systemctl enable --now filebeat
+systemctl status filebeat
