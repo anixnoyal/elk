@@ -14,8 +14,6 @@ setup.kibana:
   host: "192.168.31.244:5601"
 output.elasticsearch:
   hosts: ["192.168.31.249:9200"]
-output.logstash:
-  hosts: ["your_logstash_server:5044"]
 
 metricbeat setup -e
 
