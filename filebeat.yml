@@ -1,9 +1,12 @@
 filebeat.inputs:
 - type: filestream
-  id: my-filestream-id
+  id: jenkins-app
   paths:
     - /var/log/messages
     - /var/log/*.log
+  fields:
+    source: jenkins-app
+  fields_under_root: true
 
 setup.kibana:
   host: "192.168.31.244:5601"
