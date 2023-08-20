@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Backup existing Sendmail configuration
+cp /etc/mail/sendmail.cf /etc/mail/sendmail.cf.backup
+
+# Check if sendmail.mc exists
+if [[ ! -f /etc/mail/sendmail.mc ]]; then
+    echo "Error: sendmail.mc not found!"
+    exit 1
+fi
+
+# 1. Block email without a sender address
+if ! grep -q "LOCAL_CONFIG" /etc/mail/sendmail.mc; then
+    echo "LOCAL_CONFIG" >> /etc/mail/sendmail.mc
+fi
+
+# Add rule to block emails without a sender address
+if ! grep -q "R^$* \$#error \$@ 5.1.0 \$: \"Sender address required\"" /etc/mail/sendmail.mc; then
+    echo "LOCAL_RULESETS" >> /etc/mail/sendmail.mc
+    echo "SLocal_check_mail" >> /etc/mail/sendmail.mc
+    echo "R^$* \$#error \$@ 5.1.0 \$: \"Sender address required\"" >> /etc/mail/sendmail.mc
+fi
+
+# 2. Block email to send from user@hostname
+# First, get the hostname
+HOSTNAME=$(hostname)
+if ! grep -q "R${HOSTNAME}" /etc/mail/sendmail.mc; then
+    echo "LOCAL_RULESETS" >> /etc/mail/sendmail.mc
+    echo "SLocal_check_mail" >> /etc/mail/sendmail.mc
+    echo "R${HOSTNAME} \$#error \$@ 5.7.1 \$: \"Sending from user@hostname is prohibited\"" >> /etc/mail/sendmail.mc
+fi
+
+# Rebuild the sendmail.cf file
+m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+
+# Restart Sendmail
+systemctl restart sendmail
+
+echo "Configurations applied successfully!"
