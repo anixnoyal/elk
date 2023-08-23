@@ -37,3 +37,39 @@ m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
 systemctl restart sendmail
 
 echo "Configurations applied successfully!"
+######################################################
+
+#!/bin/bash
+
+# Step 1: Backup all sendmail configurations
+backup_dir="/etc/mail/backup_$(date +%F_%T)"
+mkdir -p "$backup_dir"
+cp /etc/mail/sendmail.cf "$backup_dir/sendmail.cf.backup"
+cp /etc/mail/sendmail.mc "$backup_dir/sendmail.mc.backup"
+
+# Step 2: Block sending emails if sender information is blank
+cat <<EOF >> /etc/mail/sendmail.mc
+LOCAL_CONFIG
+F{BlankEnvelope} ^<>
+LOCAL_RULESETS
+Scheck_mail
+R$* <@ $* > $*               $@ OK
+R$+                         $: $(macro {BlankEnvelope} $1 $)
+R$* <@ $* > $*               $@ OK
+R<>                         $#error $@ 5.0.0 $: "550 No sender, message refused"
+EOF
+
+# Step 3: Block if to address is empty
+# Add rules to check for empty recipient
+cat <<EOF >> /etc/mail/sendmail.mc
+Scheck_rcpt
+R$*                         $#error $@ 5.1.1 $: "550 Recipient address is required"
+EOF
+
+# Generate the sendmail.cf from sendmail.mc
+m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
+
+# Restart Sendmail for changes to take effect
+systemctl restart sendmail
+
+echo "Sendmail configuration updated and service restarted."
