@@ -120,3 +120,35 @@ make -C /etc/mail
 # systemctl restart sendmail
 
 echo "Configuration updated successfully."
+
+
+
+#!/bin/bash
+
+# Check for root permissions
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root."
+  exit 1
+fi
+
+# File path
+ALIASES_FILE="/etc/aliases"
+
+# Back up existing /etc/aliases file
+cp ${ALIASES_FILE} ${ALIASES_FILE}.backup
+
+# Update or append postmaster, jenkins, and root aliases
+for user in postmaster jenkins root; do
+    if grep -q "^${user}:" ${ALIASES_FILE}; then
+        # Update existing line
+        sed -i "s/^${user}:.*$/${user}:   \/dev\/null/" ${ALIASES_FILE}
+    else
+        # Append new line
+        echo "${user}:   /dev/null" >> ${ALIASES_FILE}
+    fi
+done
+
+# Update the aliases database
+newaliases
+
+echo "Aliases updated successfully."
