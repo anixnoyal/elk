@@ -80,31 +80,29 @@ echo "Sendmail configuration updated and service restarted."
 
 #!/bin/bash
 
-# Check for root permissions
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root."
-   exit 1
+# Backup existing configuration files before making changes
+cp /etc/mail/submit.mc /etc/mail/submit.mc.bak
+cp /etc/sysconfig/sendmail /etc/sysconfig/sendmail.bak
+cp /etc/mail/sendmail.mc /etc/mail/sendmail.mc.bak
+
+# Update MSP value in submit.mc to 127.0.0.1
+sed -i "s/^[[:blank:]]*FEATURE(\`msp',[[:blank:]]*[^)]*)/FEATURE(\`msp', \`127.0.0.1')/g" /etc/mail/submit.mc
+
+# Update /etc/sysconfig/sendmail with DAEMON=no and QUEUE=5m
+echo "DAEMON=no" >> /etc/sysconfig/sendmail
+echo "QUEUE=5m" >> /etc/sysconfig/sendmail
+
+# Check for smart host configuration in sendmail.mc
+# If not found, add mysmtp.text.com as the smart host
+if ! grep -q "DSmysmtp.text.com" /etc/mail/sendmail.mc; then
+    echo "dnl # Adding Smart host" >> /etc/mail/sendmail.mc
+    echo "define(\`SMART_HOST', \`mysmtp.text.com')dnl" >> /etc/mail/sendmail.mc
 fi
 
-# Step 1: Change MSP value in submit.mc
-echo "Changing MSP value in submit.mc to 127.0.0.1..."
-sed -i 's/^[[:blank:]]*FEATURE(`msp',[[:blank:]]*[^)]*)/FEATURE(`msp', `127.0.0.1')/g' /etc/mail/submit.mc
+# Rebuild Sendmail configurations
+make -C /etc/mail
 
-# Step 2: Add lines to /etc/sysconfig/sendmail
-echo "Adding configuration lines to /etc/sysconfig/sendmail..."
-{
-  echo "DAEMON=no"
-  echo "QUEUE=5m"
-} >> /etc/sysconfig/sendmail
+# Restart Sendmail service to apply changes (this may vary depending on your init system)
+systemctl restart sendmail
 
-# Step 3: Check for smart host in sendmail.mc and add if necessary
-if grep -q "DSmysmtp.text.com" /etc/mail/sendmail.mc; then
-  echo "Smart host already configured."
-else
-  echo "Configuring smart host to mysmtp.text.com..."
-  echo "define(\`SMART_HOST', \`mysmtp.text.com')dnl" >> /etc/mail/sendmail.mc
-fi
-
-# Inform user to rebuild sendmail configuration
-echo "Done making changes. You may need to rebuild your sendmail configuration and restart the service for changes to take effect."
-
+echo "Sendmail configuration updated."
