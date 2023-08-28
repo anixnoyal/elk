@@ -73,3 +73,38 @@ m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf
 systemctl restart sendmail
 
 echo "Sendmail configuration updated and service restarted."
+
+
+
+
+
+#!/bin/bash
+
+# Check for root permissions
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root."
+   exit 1
+fi
+
+# Step 1: Change MSP value in submit.mc
+echo "Changing MSP value in submit.mc to 127.0.0.1..."
+sed -i 's/^[[:blank:]]*FEATURE(`msp',[[:blank:]]*[^)]*)/FEATURE(`msp', `127.0.0.1')/g' /etc/mail/submit.mc
+
+# Step 2: Add lines to /etc/sysconfig/sendmail
+echo "Adding configuration lines to /etc/sysconfig/sendmail..."
+{
+  echo "DAEMON=no"
+  echo "QUEUE=5m"
+} >> /etc/sysconfig/sendmail
+
+# Step 3: Check for smart host in sendmail.mc and add if necessary
+if grep -q "DSmysmtp.text.com" /etc/mail/sendmail.mc; then
+  echo "Smart host already configured."
+else
+  echo "Configuring smart host to mysmtp.text.com..."
+  echo "define(\`SMART_HOST', \`mysmtp.text.com')dnl" >> /etc/mail/sendmail.mc
+fi
+
+# Inform user to rebuild sendmail configuration
+echo "Done making changes. You may need to rebuild your sendmail configuration and restart the service for changes to take effect."
+
