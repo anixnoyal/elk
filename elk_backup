@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Variables
+ES_HOST="localhost:9200"
+REPO_PATH="/mount_point/shared_fs"
+REPO_NAME="my_backup"
+SNAPSHOT_NAME="snapshot_1"
+
+# Function to check if command was successful
+check_success() {
+    if [ $? -ne 0 ]; then
+        echo "Error executing command, exiting"
+        exit 1
+    fi
+}
+
+# 1. Backup Elasticsearch on Source Server
+
+# a. Register a Snapshot Repository
+echo "Registering snapshot repository..."
+curl -X PUT "$ES_HOST/_snapshot/$REPO_NAME" -H "Content-Type: application/json" -d '{
+    "type": "fs",
+    "settings": {
+        "location": "'$REPO_PATH'",
+        "compress": true
+    }
+}'
+check_success
+
+# b. Create a Snapshot
+echo "Creating snapshot..."
+curl -X PUT "$ES_HOST/_snapshot/$REPO_NAME/$SNAPSHOT_NAME?wait_for_completion=true"
+check_success
+
+# Inform user backup completed
+echo "Backup completed!"
+
+# Assuming you've transferred the snapshot to a new server and the new server has access to the snapshot,
+# below are the steps to restore Elasticsearch on the destination server.
+
+# 2. Restore Elasticsearch on Destination Server
+
+# a. Set Up the Snapshot Repository (Same as backup step, ensures the repository is recognized)
+echo "Setting up snapshot repository on destination..."
+curl -X PUT "$ES_HOST/_snapshot/$REPO_NAME" -H "Content-Type: application/json" -d '{
+    "type": "fs",
+    "settings": {
+        "location": "'$REPO_PATH'",
+        "compress": true
+    }
+}'
+check_success
+
+# b. Restore from Snapshot
+echo "Restoring from snapshot..."
+curl -X POST "$ES_HOST/_snapshot/$REPO_NAME/$SNAPSHOT_NAME/_restore"
+check_success
+
+echo "Restore completed!"
+
+
+
+
