@@ -1,2 +1,12 @@
-VOLUME_ID=$(aws ec2 create-volume --volume-type gp3 --size 100 --availability-zone us-west-2a --query 'VolumeId' --output text)
-aws ec2 create-tags --resources $VOLUME_ID --tags Key=Purpose,Value=TestVolume
+VOLUME_ID=$(aws ec2 create-volume \
+  --volume-type gp3 \
+  --size 100 \
+  --availability-zone us-west-2a \
+  --kms-key-id arn:aws:kms:us-west-2:123456789012:key/abcd1234-a123-456a-a12b-a123b4cd56ef \
+  --encrypted \
+  --query 'VolumeId' \
+  --output text)
+
+aws ec2 create-tags \
+  --resources $VOLUME_ID \
+  --tags Key=Purpose,Value=TestVolume
