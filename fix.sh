@@ -4,8 +4,8 @@ sudo systemctl status elasticsearch
 # Check cluster health (replace <elastic-password> with elastic user password)
 curl -u elastic:<elastic-password> -X GET "http://localhost:9200/_cluster/health?pretty"
 
-# Generate enrollment token for Kibana
-sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana --url http://localhost:9200 -u elastic -p <elastic-password>
+# Generate enrollment token for Kibana (prompts for elastic password)
+sudo /usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token -s kibana --url http://localhost:9200
 
 # Generate SSL certificate for Elasticsearch (if not already done)
 sudo /usr/share/elasticsearch/bin/elasticsearch-certutil ca --out /etc/elasticsearch/elastic-stack-ca.p12 --pass ""
@@ -29,7 +29,7 @@ sudo dnf install -y kibana
 # Reset kibana_system password
 sudo /usr/share/elasticsearch/bin/elasticsearch-reset-password -u kibana_system --batch
 
-# Configure Kibana (edit /etc/kibana/kibana.yml)
+# Configure Kibana (edit /etc/kibana/kibana.yml, replace <kibana_system_password>)
 sudo bash -c 'cat <<EOF >/etc/kibana/kibana.yml
 server.port: 5601
 server.host: "0.0.0.0"
